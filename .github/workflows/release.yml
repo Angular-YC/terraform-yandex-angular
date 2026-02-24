@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          body: |
+            ## Terraform Module Release ${{ github.ref_name }}
+
+            ### Usage
+            ```hcl
+            module "angular" {
+              source = "github.com/Angular-YC/terraform-yandex-angular//modules/angular_yc?ref=${{ github.ref_name }}"
+
+              app_name      = "my-angular-app"
+              env           = "production"
+              domain_name   = "app.example.com"
+              manifest_path = "./deploy.manifest.json"
+            }
+            ```

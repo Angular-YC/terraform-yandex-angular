@@ -1,0 +1,34 @@
+region = "ru-central1"
+
+app_name    = "my-angular-app"
+env         = "dev"
+domain_name = "dev.example.com"
+
+manifest_path = "../../build/deploy.manifest.json"
+build_dir     = "../../build"
+
+enable_response_cache = true
+enable_cdn            = false
+
+function_memory = {
+  server = 256
+  image  = 128
+}
+
+function_timeout = {
+  server = 30
+  image  = 30
+}
+
+prepared_instances = {
+  server = 0
+  image  = 0
+}
+
+cache_ttl_days = 1
+
+allowed_origins = ["http://localhost:4200", "https://dev.example.com"]
+allowed_cidrs   = []
+
+create_dns_zone = true
+dns_zone_id     = ""
