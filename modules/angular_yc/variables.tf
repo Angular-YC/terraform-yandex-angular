@@ -103,6 +103,17 @@ variable "dns_zone_id" {
   description = "Existing DNS zone ID (required if create_dns_zone is false)"
   type        = string
   default     = ""
+
+  validation {
+    condition     = var.create_dns_zone || trimspace(var.dns_zone_id) != "" || trimspace(var.certificate_id) != ""
+    error_message = "dns_zone_id must be set when create_dns_zone is false and certificate_id is not provided."
+  }
+}
+
+variable "certificate_id" {
+  description = "Existing Certificate Manager certificate ID. If set, the module reuses it and does not create a managed certificate."
+  type        = string
+  default     = ""
 }
 
 variable "prepared_instances" {

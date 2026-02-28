@@ -23,7 +23,7 @@ Main deployment module that provisions:
 - Cloud Functions (server + optional image optimizer)
 - Object Storage buckets (assets + optional response cache)
 - API Gateway from OpenAPI template
-- DNS zone and managed TLS certificate
+- DNS zone and TLS certificate (managed or external)
 - Logging group and IAM bindings
 
 ### `modules/core_security`
@@ -45,6 +45,9 @@ YDB Serverless database and service account wiring for cache metadata.
 | `env` | Environment (`dev`, `staging`, `production`) | Yes |
 | `domain_name` | Custom domain | Yes |
 | `manifest_path` | Path to deployment manifest JSON | Yes |
+| `create_dns_zone` | Create DNS zone for `domain_name` | No |
+| `dns_zone_id` | Existing zone ID when `create_dns_zone=false` | No |
+| `certificate_id` | Existing cert ID to reuse instead of managed cert creation | No |
 | `enable_response_cache` | Enable HTML response caching | No |
 | `enable_cdn` | Enable CDN (optional) | No |
 

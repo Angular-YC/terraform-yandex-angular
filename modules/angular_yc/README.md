@@ -10,7 +10,7 @@ Main Terraform module for deploying Angular SSR applications to Yandex Cloud.
 - Object Storage for browser assets and prerender output
 - API Gateway routing with OpenAPI template
 - Optional response cache (S3 + YDB metadata)
-- DNS and managed TLS certificate
+- DNS and TLS certificate (managed or external `certificate_id`)
 - Lockbox/KMS integration via `core_security`
 
 ## Usage
@@ -42,6 +42,9 @@ module "angular_app" {
 - `manifest_path` (required)
 - `enable_response_cache` (default: `true`)
 - `enable_cdn` (default: `false`)
+- `create_dns_zone` (default: `true`)
+- `dns_zone_id` (required when `create_dns_zone = false` and `certificate_id` is empty)
+- `certificate_id` (optional; reuse existing Certificate Manager certificate)
 
 ## Deployment Flow
 
@@ -55,5 +58,6 @@ module "angular_app" {
 - API Gateway domain and ID
 - assets/cache buckets
 - function IDs and versions
+- certificate ID and status
 - YDB endpoint/database (when response cache enabled)
 - lockbox secret IDs

@@ -31,6 +31,10 @@ locals {
   # Resource naming
   prefix = "${var.app_name}-${var.env}"
 
+  # TLS certificate mode
+  external_certificate_id  = trimspace(var.certificate_id)
+  use_external_certificate = local.external_certificate_id != ""
+
   # Common tags (for yandex_function - requires set of strings)
   common_tags = [
     "app:${var.app_name}",
@@ -345,6 +349,8 @@ resource "yandex_dns_zone" "main" {
 }
 
 resource "yandex_cm_certificate" "main" {
+  count = local.use_external_certificate ? 0 : 1
+
   name    = "${local.prefix}-cert"
   domains = [var.domain_name]
 
@@ -357,8 +363,8 @@ resource "yandex_cm_certificate" "main" {
 
 # DNS validation records
 resource "yandex_dns_recordset" "validation" {
-  for_each = {
-    for idx, record in yandex_cm_certificate.main.challenges : idx => record
+  for_each = local.use_external_certificate ? {} : {
+    for idx, record in yandex_cm_certificate.main[0].challenges : idx => record
     if record.type == "DNS_CNAME"
   }
 
