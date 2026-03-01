@@ -2,28 +2,72 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: terraform-yc-release
+  cancel-in-progress: false
+
 jobs:
   release:
-    name: Create Release
+    name: Tag and Release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine release tag
+        id: tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch --tags --force
+
+          existing="$(git tag --points-at "$GITHUB_SHA" -l 'v[0-9]*.[0-9]*.[0-9]*' | head -n1 || true)"
+          if [[ -n "$existing" ]]; then
+            echo "tag=$existing" >> "$GITHUB_OUTPUT"
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          latest="$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1 || true)"
+          if [[ -z "$latest" ]]; then
+            next="v1.0.0"
+          else
+            version="${latest#v}"
+            IFS='.' read -r major minor patch <<< "$version"
+            next="v${major}.${minor}.$((patch + 1))"
+          fi
+
+          echo "tag=$next" >> "$GITHUB_OUTPUT"
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag
+        if: steps.tag.outputs.created == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.tag.outputs.tag }}" "$GITHUB_SHA"
+          git push origin "${{ steps.tag.outputs.tag }}"
+
       - uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
           generate_release_notes: true
           body: |
-            ## Terraform Module Release ${{ github.ref_name }}
+            ## Terraform Module Release ${{ steps.tag.outputs.tag }}
 
             ### Usage
             ```hcl
             module "angular" {
-              source = "github.com/Angular-YC/terraform-yandex-angular//modules/angular_yc?ref=${{ github.ref_name }}"
+              source = "github.com/Angular-YC/terraform-yandex-angular//modules/angular_yc?ref=${{ steps.tag.outputs.tag }}"
 
               app_name      = "my-angular-app"
               env           = "production"
