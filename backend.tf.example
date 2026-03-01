@@ -1,10 +1,16 @@
 terraform {
   backend "s3" {
-    endpoint = "storage.yandexcloud.net"
+    endpoints = {
+      s3 = "https://storage.yandexcloud.net"
+    }
     bucket   = "my-terraform-state-bucket"
     key      = "angular-yc/terraform.tfstate"
     region   = "ru-central1"
     encrypt  = true
     workspace_key_prefix = "workspaces"
+    skip_region_validation      = true
+    skip_credentials_validation = true
+    skip_metadata_api_check     = true
+    skip_requesting_account_id  = true
   }
 }
