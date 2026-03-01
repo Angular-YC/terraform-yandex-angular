@@ -148,7 +148,7 @@ resource "yandex_storage_bucket" "cache" {
 resource "yandex_ydb_database_serverless" "response_cache" {
   count = var.enable_response_cache ? 1 : 0
 
-  name        = "${local.prefix}-response_cache-db"
+  name        = "${local.prefix}-response-cache-db"
   description = "Serverless YDB database for Response cache metadata"
 
   serverless_database {
