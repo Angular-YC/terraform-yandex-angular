@@ -111,6 +111,18 @@ variable "certificate_id" {
   default     = ""
 }
 
+variable "assets_bucket_name" {
+  description = "Existing Object Storage bucket for assets. If set, the module reuses it and does not create a new assets bucket."
+  type        = string
+  default     = ""
+}
+
+variable "cache_bucket_name" {
+  description = "Existing Object Storage bucket for response cache. If set with enable_response_cache=true, the module reuses it and does not create a new cache bucket."
+  type        = string
+  default     = ""
+}
+
 variable "prepared_instances" {
   description = "Number of prepared function instances"
   type = object({
