@@ -363,16 +363,13 @@ resource "yandex_cm_certificate" "main" {
 
 # DNS validation records
 resource "yandex_dns_recordset" "validation" {
-  for_each = local.use_external_certificate ? {} : {
-    for idx, record in yandex_cm_certificate.main[0].challenges : idx => record
-    if record.type == "DNS_CNAME"
-  }
+  for_each = local.use_external_certificate ? {} : { "0" = true }
 
   zone_id = var.create_dns_zone ? yandex_dns_zone.main[0].id : var.dns_zone_id
-  name    = each.value.dns_name
+  name    = yandex_cm_certificate.main[0].challenges[0].dns_name
   type    = "CNAME"
   ttl     = 60
-  data    = [each.value.dns_value]
+  data    = [yandex_cm_certificate.main[0].challenges[0].dns_value]
 }
 
 # API Gateway custom domain
