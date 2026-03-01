@@ -25,12 +25,12 @@ output "certificate_id" {
 
 output "assets_bucket" {
   description = "Assets bucket name"
-  value       = yandex_storage_bucket.assets.bucket
+  value       = local.assets_bucket
 }
 
 output "cache_bucket" {
   description = "Cache bucket name"
-  value       = var.enable_response_cache ? yandex_storage_bucket.cache[0].bucket : null
+  value       = var.enable_response_cache ? local.cache_bucket : null
 }
 
 output "server_function_id" {

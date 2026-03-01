@@ -45,13 +45,17 @@ module "angular_app" {
 - `create_dns_zone` (default: `true`)
 - `dns_zone_id` (required when `create_dns_zone = false` and `certificate_id` is empty)
 - `certificate_id` (optional; reuse existing Certificate Manager certificate)
+- `assets_bucket_name` (optional; reuse pre-created assets bucket, recommended for strict 4-step flow)
+- `cache_bucket_name` (optional; reuse pre-created cache bucket when response cache is enabled)
 
 ## Deployment Flow
 
-1. Build artifacts with `angular-yc build` (manifest + zips + static files)
-2. Upload artifacts to Object Storage
-3. Apply Terraform with `manifest_path`
-4. Verify API Gateway and DNS
+1. Run `angular-yc analyze` to detect SSR/API/cache capabilities
+2. Run `angular-yc build` to create ZIP artifacts and `deploy.manifest.json`
+3. Run `angular-yc upload` to publish artifacts to Object Storage
+4. Apply Terraform module `angular_yc` with generated manifest coordinates
+
+For step 3 before step 4, provide pre-existing bucket names via `assets_bucket_name` and (optionally) `cache_bucket_name`.
 
 ## Outputs
 

@@ -35,6 +35,12 @@ locals {
   external_certificate_id  = trimspace(var.certificate_id)
   use_external_certificate = local.external_certificate_id != ""
 
+  # Bucket mode
+  external_assets_bucket     = trimspace(var.assets_bucket_name)
+  use_external_assets_bucket = local.external_assets_bucket != ""
+  external_cache_bucket      = trimspace(var.cache_bucket_name)
+  use_external_cache_bucket  = var.enable_response_cache && local.external_cache_bucket != ""
+
   # Common tags (for yandex_function - requires set of strings)
   common_tags = [
     "app:${var.app_name}",
@@ -70,6 +76,8 @@ module "security" {
 
 # Assets bucket for static files
 resource "yandex_storage_bucket" "assets" {
+  count = local.use_external_assets_bucket ? 0 : 1
+
   bucket = "${local.prefix}-assets-${random_id.bucket_suffix.hex}"
 
   # Encryption - Yandex Object Storage encrypts all data at rest by default
@@ -109,7 +117,7 @@ resource "yandex_storage_bucket" "assets" {
 
 # Cache bucket for Response cache
 resource "yandex_storage_bucket" "cache" {
-  count = var.enable_response_cache ? 1 : 0
+  count = var.enable_response_cache && !local.use_external_cache_bucket ? 1 : 0
 
   bucket = "${local.prefix}-cache-${random_id.bucket_suffix.hex}"
 
@@ -138,6 +146,13 @@ resource "yandex_storage_bucket" "cache" {
   acl = "private"
 
   tags = local.common_labels
+}
+
+locals {
+  assets_bucket = local.use_external_assets_bucket ? local.external_assets_bucket : yandex_storage_bucket.assets[0].bucket
+  cache_bucket = var.enable_response_cache ? (
+    local.use_external_cache_bucket ? local.external_cache_bucket : yandex_storage_bucket.cache[0].bucket
+  ) : ""
 }
 
 # ============================================================================
@@ -240,8 +255,8 @@ resource "yandex_function" "server" {
     {
       BUILD_ID              = local.build_id
       NODE_ENV              = "production"
-      CACHE_BUCKET          = var.enable_response_cache ? yandex_storage_bucket.cache[0].bucket : ""
-      ASSETS_BUCKET         = yandex_storage_bucket.assets.bucket
+      CACHE_BUCKET          = local.cache_bucket
+      ASSETS_BUCKET         = local.assets_bucket
       YDB_ENDPOINT          = var.enable_response_cache ? yandex_ydb_database_serverless.response_cache[0].ydb_full_endpoint : ""
       YDB_DATABASE          = var.enable_response_cache ? yandex_ydb_database_serverless.response_cache[0].database_path : ""
       YDB_ACCESS_KEY_ID     = var.enable_response_cache ? yandex_iam_service_account_static_access_key.ydb[0].access_key : ""
@@ -292,8 +307,8 @@ resource "yandex_function" "image" {
     {
       BUILD_ID      = local.build_id
       NODE_ENV      = "production"
-      CACHE_BUCKET  = var.enable_response_cache ? yandex_storage_bucket.cache[0].bucket : ""
-      ASSETS_BUCKET = yandex_storage_bucket.assets.bucket
+      CACHE_BUCKET  = local.cache_bucket
+      ASSETS_BUCKET = local.assets_bucket
     }
   )
 
@@ -312,7 +327,7 @@ resource "yandex_function" "image" {
 locals {
   openapi_spec = templatefile("${path.module}/templates/openapi.yaml.tpl", {
     api_name           = "${local.prefix}-api"
-    assets_bucket      = yandex_storage_bucket.assets.bucket
+    assets_bucket      = local.assets_bucket
     build_id           = local.build_id
     server_function_id = local.manifest.capabilities.rendering.needsServer ? yandex_function.server[0].id : ""
     server_version_id  = local.manifest.capabilities.rendering.needsServer ? yandex_function.server[0].version : ""
