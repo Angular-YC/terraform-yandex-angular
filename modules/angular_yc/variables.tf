@@ -105,6 +105,12 @@ variable "dns_zone_id" {
   default     = ""
 }
 
+variable "certificate_id" {
+  description = "Existing Certificate Manager certificate ID. If set, the module reuses it and does not create a managed certificate."
+  type        = string
+  default     = ""
+}
+
 variable "prepared_instances" {
   description = "Number of prepared function instances"
   type = object({

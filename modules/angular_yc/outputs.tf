@@ -15,7 +15,12 @@ output "custom_domain" {
 
 output "certificate_status" {
   description = "TLS certificate status"
-  value       = yandex_cm_certificate.main.status
+  value       = local.use_external_certificate ? null : yandex_cm_certificate.main[0].status
+}
+
+output "certificate_id" {
+  description = "TLS certificate ID (external or managed)"
+  value       = local.use_external_certificate ? local.external_certificate_id : yandex_cm_certificate.main[0].id
 }
 
 output "assets_bucket" {

@@ -31,6 +31,10 @@ locals {
   # Resource naming
   prefix = "${var.app_name}-${var.env}"
 
+  # TLS certificate mode
+  external_certificate_id  = trimspace(var.certificate_id)
+  use_external_certificate = local.external_certificate_id != ""
+
   # Common tags (for yandex_function - requires set of strings)
   common_tags = [
     "app:${var.app_name}",
@@ -144,7 +148,7 @@ resource "yandex_storage_bucket" "cache" {
 resource "yandex_ydb_database_serverless" "response_cache" {
   count = var.enable_response_cache ? 1 : 0
 
-  name        = "${local.prefix}-response_cache-db"
+  name        = "${local.prefix}-response-cache-db"
   description = "Serverless YDB database for Response cache metadata"
 
   serverless_database {
@@ -345,6 +349,8 @@ resource "yandex_dns_zone" "main" {
 }
 
 resource "yandex_cm_certificate" "main" {
+  count = local.use_external_certificate ? 0 : 1
+
   name    = "${local.prefix}-cert"
   domains = [var.domain_name]
 
@@ -357,16 +363,13 @@ resource "yandex_cm_certificate" "main" {
 
 # DNS validation records
 resource "yandex_dns_recordset" "validation" {
-  for_each = {
-    for idx, record in yandex_cm_certificate.main.challenges : idx => record
-    if record.type == "DNS_CNAME"
-  }
+  for_each = local.use_external_certificate ? {} : { "0" = true }
 
   zone_id = var.create_dns_zone ? yandex_dns_zone.main[0].id : var.dns_zone_id
-  name    = each.value.dns_name
+  name    = yandex_cm_certificate.main[0].challenges[0].dns_name
   type    = "CNAME"
   ttl     = 60
-  data    = [each.value.dns_value]
+  data    = [yandex_cm_certificate.main[0].challenges[0].dns_value]
 }
 
 # API Gateway custom domain

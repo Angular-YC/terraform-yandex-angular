@@ -32,3 +32,4 @@ allowed_cidrs   = []
 
 create_dns_zone = true
 dns_zone_id     = ""
+certificate_id  = ""

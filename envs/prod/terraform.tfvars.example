@@ -32,3 +32,4 @@ allowed_cidrs   = ["10.0.0.0/8"]
 
 create_dns_zone = false
 dns_zone_id     = "dns-zone-id"
+certificate_id  = "cert-id"
