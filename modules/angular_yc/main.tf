@@ -88,6 +88,7 @@ resource "yandex_storage_bucket" "assets" {
   bucket        = "${local.prefix}-assets-${random_id.bucket_suffix.hex}"
   force_destroy = true
 
+
   # Encryption - Yandex Object Storage encrypts all data at rest by default
   # No need to specify encryption configuration as it's always enabled
 

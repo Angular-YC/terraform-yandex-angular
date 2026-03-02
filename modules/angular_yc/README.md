@@ -48,8 +48,6 @@ module "angular_app" {
 - `assets_bucket_name` (optional; reuse pre-created assets bucket, recommended for strict 4-step flow)
 - `cache_bucket_name` (optional; reuse pre-created cache bucket when response cache is enabled)
 
-If `assets_bucket_name`/`cache_bucket_name` are empty, the module creates buckets during `terraform apply`.
-
 ## Deployment Flow
 
 1. Run `angular-yc analyze` to detect SSR/API/cache capabilities
