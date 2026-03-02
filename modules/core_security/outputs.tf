@@ -13,16 +13,6 @@ output "revalidate_secret_version" {
   value       = yandex_lockbox_secret_version.revalidate.id
 }
 
-output "storage_keys_secret_id" {
-  description = "Lockbox secret ID for storage keys"
-  value       = yandex_lockbox_secret.storage_keys.id
-}
-
-output "storage_sa_keys_secret_id" {
-  description = "Lockbox secret ID for service account storage keys"
-  value       = yandex_lockbox_secret.storage_sa_keys.id
-}
-
 output "database_secret_id" {
   description = "Lockbox secret ID for database credentials"
   value       = var.create_database_secret ? yandex_lockbox_secret.database[0].id : null

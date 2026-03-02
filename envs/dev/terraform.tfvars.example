@@ -33,3 +33,7 @@ allowed_cidrs   = []
 create_dns_zone = true
 dns_zone_id     = ""
 certificate_id  = ""
+
+# Optional: reuse pre-created buckets (recommended for strict 4-step flow).
+assets_bucket_name = ""
+cache_bucket_name  = ""

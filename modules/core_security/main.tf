@@ -61,42 +61,6 @@ resource "yandex_lockbox_secret_version" "revalidate" {
   }
 }
 
-# Generate storage access keys
-resource "random_password" "storage_access_key" {
-  length  = 20
-  special = false
-  upper   = true
-  lower   = true
-  numeric = true
-}
-
-resource "random_password" "storage_secret_key" {
-  length  = 40
-  special = true
-}
-
-# Store storage keys in Lockbox
-resource "yandex_lockbox_secret" "storage_keys" {
-  name        = "${local.prefix}-storage-keys"
-  description = "Object Storage access keys"
-
-  labels = var.tags
-}
-
-resource "yandex_lockbox_secret_version" "storage_keys" {
-  secret_id = yandex_lockbox_secret.storage_keys.id
-
-  entries {
-    key        = "access_key"
-    text_value = random_password.storage_access_key.result
-  }
-
-  entries {
-    key        = "secret_key"
-    text_value = random_password.storage_secret_key.result
-  }
-}
-
 # Optional: Database connection secret
 resource "yandex_lockbox_secret" "database" {
   count = var.create_database_secret ? 1 : 0
@@ -174,36 +138,4 @@ resource "yandex_resourcemanager_folder_iam_member" "logging_reader" {
   folder_id = data.yandex_client_config.current.folder_id
   role      = "logging.reader"
   member    = "serviceAccount:${yandex_iam_service_account.monitoring.id}"
-}
-
-# ============================================================================
-# Access Keys for Service Accounts
-# ============================================================================
-
-# Static access key for storage operations
-resource "yandex_iam_service_account_static_access_key" "storage" {
-  service_account_id = yandex_iam_service_account.api_gateway.id
-  description        = "Static key for Object Storage access"
-}
-
-# Store the access key in Lockbox (never output directly)
-resource "yandex_lockbox_secret" "storage_sa_keys" {
-  name        = "${local.prefix}-storage-sa-keys"
-  description = "Service account storage keys"
-
-  labels = var.tags
-}
-
-resource "yandex_lockbox_secret_version" "storage_sa_keys" {
-  secret_id = yandex_lockbox_secret.storage_sa_keys.id
-
-  entries {
-    key        = "access_key"
-    text_value = yandex_iam_service_account_static_access_key.storage.access_key
-  }
-
-  entries {
-    key        = "secret_key"
-    text_value = yandex_iam_service_account_static_access_key.storage.secret_key
-  }
 }
