@@ -68,7 +68,6 @@ output "lockbox_secret_ids" {
   description = "Lockbox secret IDs (not values)"
   value = {
     cache_purge_secret = module.security.revalidate_secret_id
-    storage_keys       = module.security.storage_keys_secret_id
   }
 }
 
