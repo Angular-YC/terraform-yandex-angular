@@ -28,6 +28,9 @@ locals {
 
   build_id = local.manifest.buildId
 
+  requested_artifact_prefix = trimsuffix(trimprefix(trimspace(var.artifact_prefix), "/"), "/")
+  artifact_prefix           = local.requested_artifact_prefix != "" ? local.requested_artifact_prefix : local.build_id
+
   # Resource naming
   prefix = "${var.app_name}-${var.env}"
 
@@ -41,13 +44,17 @@ locals {
   external_cache_bucket      = trimspace(var.cache_bucket_name)
   use_external_cache_bucket  = var.enable_response_cache && local.external_cache_bucket != ""
 
+  safe_app_tag      = replace(lower(var.app_name), "/[^a-z0-9_-]/", "_")
+  safe_env_tag      = replace(lower(var.env), "/[^a-z0-9_-]/", "_")
+  safe_build_id_tag = replace(lower(local.build_id), "/[^a-z0-9_-]/", "_")
+
   # Common tags (for yandex_function - requires set of strings)
-  common_tags = [
-    "app:${var.app_name}",
-    "env:${var.env}",
-    "build_id:${local.build_id}",
-    "managed_by:terraform"
-  ]
+  common_tags = toset([
+    "app_${local.safe_app_tag}",
+    "env_${local.safe_env_tag}",
+    "build_${local.safe_build_id_tag}",
+    "managed_by_terraform"
+  ])
 
   # Common labels (for other resources - requires map of strings)
   common_labels = {
@@ -284,8 +291,9 @@ resource "yandex_function" "server" {
   }
 
   # Function package
-  content {
-    zip_filename = var.server_zip_path != "" ? var.server_zip_path : "${var.build_dir}/artifacts/server.zip"
+  package {
+    bucket_name = local.assets_bucket
+    object_name = "${local.artifact_prefix}/functions/server.zip"
   }
 
   tags = local.common_tags
@@ -314,8 +322,9 @@ resource "yandex_function" "image" {
     }
   )
 
-  content {
-    zip_filename = var.image_zip_path != "" ? var.image_zip_path : "${var.build_dir}/artifacts/image.zip"
+  package {
+    bucket_name = local.assets_bucket
+    object_name = "${local.artifact_prefix}/functions/image.zip"
   }
 
   tags = local.common_tags
